@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Local model weights - exported separately, never committed (large, and the
+# export needs Hugging Face access the VPS may not have).
+*.onnx
+siglip-onnx/
+
+# Local catalogue snapshots and cached product images
+catalogue.json
+images/
+eval-results*.json

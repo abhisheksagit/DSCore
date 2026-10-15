@@ -309,11 +309,22 @@ to be unit-testable. Postgres is the single source of truth for everything conve
 
 Each phase ends in something you can see and judge. No phase depends on trusting the next.
 
-**Phase 1 — Catalogue & accuracy, no WhatsApp (the gate).**
+**Phase 1 — Catalogue & accuracy, no WhatsApp (the gate).** *Matcher built 15 Oct 2026.*
 Shopify sync into Postgres, embeddings for every product image, matcher service, and an
 **offline accuracy report** against your labelled image set. Deliverable: a measured number for
 auto-resolve rate and error rate, plus a tuned set of thresholds. *We do not proceed to
 customers until this passes an agreed bar.*
+
+> **Status.** The matcher, the confidence gate, the Postgres schema and the accuracy harness are
+> built and tested (`matcher/`, `schema/001_init.sql`, `eval/`, 75 tests, no network needed).
+> Running the harness caught two real bugs — a perceptual-hash match being treated as proof of
+> identity when the correct product was a near-tied runner-up (10.2% error rate), and the
+> pipeline skipping verification on a condition the gate had stopped accepting. Both fixed;
+> error rate now zero on fixtures across verifier accuracies from 0.75 to 0.90, and garments we
+> do not stock are never auto-answered. Details and the measured tables are in
+> `matcher/README.md`. **Coverage figures there are pessimistic by construction and are not a
+> forecast** — real coverage needs §8.1 (Shopify access) and §8.3 (labelled images).
+> Still to build in this phase: the Shopify sync itself.
 
 **Phase 2 — WhatsApp in shadow mode.**
 Integration live, text enquiries handled, but **every reply is a draft to your team, nothing
