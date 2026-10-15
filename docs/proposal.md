@@ -192,6 +192,42 @@ thresholds, prove accuracy to you monthly, and catch drift when new collections 
 
 ---
 
+## 4a. Consequences of "no colour variations" *(added 15 Oct 2026)*
+
+Confirmed: one product = one garment in one colourway; variants are sizes only (38/40/42/44/46).
+Two real design consequences.
+
+**Good news for accuracy.** Colour becomes a *discriminating* signal rather than a trap. The
+classic failure mode for fashion matching — same product, six colourways, retrieval can't tell
+them apart because they share a SKU family — does not exist in your catalogue. Colour is also
+one of the strongest and most stable signals in an image embedding. So where §4 warned about
+near-identical colourways, the residual risk narrows to genuinely different products that happen
+to look alike (same silhouette, similar palette, different embroidery). That is a smaller and
+more tractable problem.
+
+**Requirement 6 needs a different answer than first assumed.** "Do you have this in another
+colour?" cannot be served by a variant lookup, because there are no colour variants. Answering
+it correctly is a *retrieval* task: find visually similar garments in a different colour family.
+So the flow becomes:
+
+1. Extract the dominant colour family of the matched product.
+2. Search for visually similar products (same embedding neighbourhood, similar silhouette) whose
+   dominant colour family differs.
+3. Reply honestly — each outfit is a single colourway — and offer the closest alternatives with
+   photos and links. In stock first.
+
+This is the same machinery as requirement 5 (similar products for sold-out items), so it is
+cheap to add — but it must be built deliberately, or the assistant will answer "no" to a very
+common and very commercial question. It also means **colour family should be a stored,
+queryable attribute**, derived once per product at sync time, not inferred per enquiry.
+
+**Size answers get simpler.** A fixed, small size set means "available in 42?" is a direct
+inventory lookup on a known option value, and the assistant can list the full in-stock range
+unprompted ("42 is available — we also have 40 and 44 in this one"), which tends to convert
+better than a bare yes/no.
+
+---
+
 ## 5. Architecture
 
 ```
@@ -320,9 +356,11 @@ Items 1–5 block the build. Items 6–10 are needed before go-live.
 1. **Shopify Admin API access.** A custom app token with `read_products`, `read_inventory`,
    `read_locations`, plus your `*.myshopify.com` domain. Also: roughly how many products and
    variants, and do all products have clean studio images?
-2. **Size and colour conventions.** How sizes appear in Shopify variants (is "42" a variant
-   option value?), and whether colourways are variants of one product or separate products. This
-   changes both the matching and the answers.
+2. ~~**Size and colour conventions.**~~ **Resolved 15 Oct 2026:** no colour variations — one
+   product is one garment in one colourway. Sizes are numeric: **38, 40, 42, 44, 46**, as variant
+   option values. Design consequences in §4a. *Still needed:* confirmation that these are the
+   variant option values in Shopify as spelled (e.g. `42`, not `Size 42` or `42 (M)`), and what
+   happens for free-size / unstitched items if you carry any.
 3. **A labelled image set — the highest-value item.** 150–300 real customer enquiry images from
    your WhatsApp history, each tagged with the correct product. Include the hard cases: cropped
    screenshots, reel stills, near-identical colourways, and items you don't stock. Without this
@@ -368,7 +406,8 @@ settings — or we develop against the VPS instead.
 
 1. Run the WhatsApp Coexistence eligibility check (needs §8.4).
 2. VPS spec check and SigLIP benchmark (needs §8.5).
-3. Shopify sync + schema, once the Admin API token exists (§8.1–8.2).
+3. Shopify sync + schema, once the Admin API token exists (§8.1). Size/colour model is
+   settled (§4a) — schema can be written now.
 4. Assemble the labelled image set (§8.3) — this gates Phase 1's accuracy report, which in
    turn gates any customer-facing reply.
 
